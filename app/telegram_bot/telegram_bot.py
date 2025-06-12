@@ -1,9 +1,13 @@
 import logging
+import asyncio
+from os import name
 
+from asgiref.sync import sync_to_async
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, BotCommand, Bot
 from telegram.ext import Application, CommandHandler, ContextTypes, filters, ConversationHandler, MessageHandler
 
 from app.settings import TELEGRAM_BOT_TOKEN
+from .models import TgUser
 
 logger = logging.getLogger('django')
 
@@ -30,6 +34,11 @@ markup_backend = ReplyKeyboardMarkup(keyboard_backend)
 
 CHOOSE_PROF, CHOOSE_BACK, CHOOSE_FRONT = range(3)
 
+@sync_to_async
+def save_to_db(username):
+    TgUser.objects.create(username=name, filters='some_filter')
+    
+
 async def set_commands(application: Application) -> None:
     await application.bot.set_my_commands([('start', 'start the bot'),
                                          ('subscribe', 'subscribe to sending you vacancies'),
@@ -40,6 +49,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f'Привет {update.effective_user.username}, введите /subscribe')
 
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await save_to_db(update.effective_user.username)
     await update.message.reply_text('Вы подписаны на рассылку, введете /settings для настройки фильтра')
 
 # FSM
@@ -79,7 +89,8 @@ async def recived_information(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_data = context.user_data
     await update.message.reply_text(f'Это твои настройки {user_data}', reply_markup=ReplyKeyboardRemove())
-    user_data.clear()
+    TgUser.objects.create(username=update.effective_user.username, filters=user_data)
+    asyncio.run(user_data.clear())
     return ConversationHandler.END
 
 conv_handler = ConversationHandler(
