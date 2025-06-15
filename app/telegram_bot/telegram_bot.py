@@ -35,8 +35,8 @@ markup_backend = ReplyKeyboardMarkup(keyboard_backend)
 CHOOSE_PROF, CHOOSE_BACK, CHOOSE_FRONT = range(3)
 
 @sync_to_async
-def save_to_db(username):
-    TgUser.objects.create(username=name, filters='some_filter')
+def save_to_db(username=name, filters=None):
+    TgUser.objects.update_or_create(username=username, filters='some_filter')
     
 
 async def set_commands(application: Application) -> None:
@@ -89,8 +89,8 @@ async def recived_information(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     user_data = context.user_data
     await update.message.reply_text(f'Это твои настройки {user_data}', reply_markup=ReplyKeyboardRemove())
-    TgUser.objects.create(username=update.effective_user.username, filters=user_data)
-    asyncio.run(user_data.clear())
+    await save_to_db(username=update.effective_user.username, filters=user_data)
+    user_data.clear()
     return ConversationHandler.END
 
 conv_handler = ConversationHandler(
