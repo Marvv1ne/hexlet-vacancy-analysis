@@ -29,6 +29,9 @@ migrate:
 run:
 	uv run manage.py runserver
 
+run_bot:
+	uv run manage.py run_bot
+
 shell:
 	uv run manage.py shell
 
