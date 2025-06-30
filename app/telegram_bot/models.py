@@ -5,6 +5,7 @@ from django_celery_beat.models import PeriodicTask, IntervalSchedule
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 import json
+import logging
 
 # Create your models here.
 class TgUser(models.Model):
@@ -26,28 +27,32 @@ class UserSubscription(models.Model):
 
 
 def create_or_update_periodic_task(subscription):
-    # Преобразуем user interval в совместимый с IntervalSchedule
+    logger = logging.getLogger(__name__)
+    logger.info(f"Создание/обновление задачи для подписки: {subscription.id}, user: {subscription.user_id}, interval: {subscription.interval}")
     period_map = {
-        'minute': 'minutes',
-        'day': 'days',
-        'week': 'weeks',
-        'hour': 'hours',
-        'seconds': 'seconds',
+        'minute': IntervalSchedule.MINUTES,
+        'day': IntervalSchedule.DAYS,
+        #'week': IntervalSchedule.WEEKS,
+        'hour': IntervalSchedule.HOURS,
+        'seconds': IntervalSchedule.SECONDS,
     }
     period = period_map.get(subscription.interval, 'days')
+    logger.info(f"Используемый период: {period}")
     interval, _ = IntervalSchedule.objects.get_or_create(
         every=1,
         period=period
     )
 
-    # Формируем параметры задачи
     if subscription.send_via_telegram and subscription.user.chat_id:
-        task_name = 'app.services.sender_service.sender.send_telegram_message_task'
+        task_name = 'app.services.sender_service.tasks.send_telegram_message_task'
         args = json.dumps([subscription.user.chat_id, f"Ваша рассылка: {subscription.filters}"])
+        logger.info(f"Готовим задачу для Telegram: {args}")
     elif subscription.send_via_email and subscription.user.email:
-        task_name = 'app.services.sender_service.sender.send_email_message_task'
+        task_name = 'app.services.sender_service.tasks.send_email_message_task'
         args = json.dumps([subscription.user.email, "Ваша рассылка", str(subscription.filters)])
+        logger.info(f"Готовим задачу для Email: {args}")
     else:
+        logger.warning(f"Не удалось создать задачу: нет email или chat_id для подписки {subscription.id}")
         return
 
     PeriodicTask.objects.update_or_create(
@@ -59,6 +64,7 @@ def create_or_update_periodic_task(subscription):
             'enabled': subscription.is_active,
         }
     )
+    logger.info(f"PeriodicTask создан/обновлён для подписки {subscription.id}")
 
 
 @receiver(post_save, sender=UserSubscription)
