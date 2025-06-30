@@ -1,4 +1,5 @@
 import os
+import asyncio
 from django.core.mail import send_mail
 from django.conf import settings
 from telegram import Bot
@@ -28,4 +29,4 @@ def send_telegram_message(chat_id, message):
     if not token:
         raise ValueError('TELEGRAM_BOT_TOKEN не задан в настройках!')
     bot = Bot(token=token)
-    bot.send_message(chat_id=chat_id, text=message)
+    asyncio.run(bot.send_message(chat_id=chat_id, text=message))
