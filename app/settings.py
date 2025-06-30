@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'app.services.hh.hh_parser',
+    'app.services.sender_service',
     'app.telegram_bot',
 ]
 
@@ -144,11 +145,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Telegram bot settings
 
-TELEGRAM_BOT_TOKEN = os.getenv('TOKEN')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 
 # Celery settings
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
