@@ -29,19 +29,3 @@ def send_telegram_message(chat_id, message):
         raise ValueError('TELEGRAM_BOT_TOKEN не задан в настройках!')
     bot = Bot(token=token)
     bot.send_message(chat_id=chat_id, text=message)
-
-
-@shared_task
-def send_email_message_task(to_email, subject, message):
-    """
-    Celery задача для отправки email.
-    """
-    send_email_message(to_email, subject, message)
-
-
-@shared_task
-def send_telegram_message_task(chat_id, message):
-    """
-    Celery задача для отправки сообщения в Telegram.
-    """
-    send_telegram_message(chat_id, message) 
