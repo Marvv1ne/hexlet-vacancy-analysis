@@ -31,5 +31,5 @@ markup_settings = ReplyKeyboardMarkup([
     ["create_or_update_settings"],
     ["show_settings"],
     ["delete_settings"],
-    ["Отменить выбор"]
+    ["exit"]
 ], resize_keyboard=True)
