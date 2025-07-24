@@ -215,6 +215,11 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_data.clear()
     return ConversationHandler.END
 
+async def exit(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    await update.message.reply_text("Выход из настроек фильтра", reply_markup=ReplyKeyboardRemove())
+    context.user_data.clear()
+    return ConversationHandler.END
+
 settings_handler = ConversationHandler(
     entry_points=[
         CommandHandler('settings', settings),
@@ -254,6 +259,7 @@ settings_handler = ConversationHandler(
     },
 
      fallbacks=[
+        MessageHandler(filters.Regex("^exit$"), exit),
         MessageHandler(filters.Regex("^Done$"), done),
         MessageHandler(filters.Regex("^🔙 Назад$"), back_to_previose_stage),
     ],
