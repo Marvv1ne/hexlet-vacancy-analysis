@@ -1,13 +1,31 @@
 import logging
+from typing import Dict
 from app.telegram_bot.models import TgUser, UserSubscriptionSettings
 from django_celery_beat.models import CrontabSchedule
 from asgiref.sync import sync_to_async
+from app.telegram_bot.models import TgUser, UserSubscriptionSettings
+
+@sync_to_async
+def get_or_create_user(username):
+    user = TgUser.objects.get_or_create(username=username)
+    return user
+
+@sync_to_async
+def get_user_subscription(user_id):
+    try:
+        subscription = UserSubscriptionSettings.objects.get(user=user_id)
+        return subscription
+    except UserSubscriptionSettings.DoesNotExist:
+        return None
+
+    
+
 
 @sync_to_async
 def save_subscription_settings_to_db(username, filters, interval_choice):
     """
     Сохраняет или обновляет настройки подписки пользователя с нужным crontab-расписанием.
-    interval_choice: 'minute', 'day', 'week'
+    выбор интервала: 'minute', 'day', 'week'
     """
     user = TgUser.objects.get(username=username)
     if interval_choice == 'minute':
@@ -25,7 +43,7 @@ def save_subscription_settings_to_db(username, filters, interval_choice):
     else:
         raise ValueError('Unknown interval')
 
-    subscription, _ = UserSubscriptionSettings.objects.get_or_create(
+    subscription, _ = UserSubscriptionSettings.objects.update_or_create(
         user=user,
         filters= filters,
         crontab= crontab,

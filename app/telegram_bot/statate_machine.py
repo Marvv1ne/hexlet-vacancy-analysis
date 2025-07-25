@@ -9,29 +9,17 @@ from app.telegram_bot.keyboards import (
 )
 
 from app.telegram_bot.models import TgUser, UserSubscriptionSettings
-from app.telegram_bot.utils import save_subscription_settings_to_db
+from app.telegram_bot.utils import save_subscription_settings_to_db, get_or_create_user, get_user_subscription
 
 CHOOSE_SETTINGS, CHOOSE_FILTERS, CHOOSE_FRONT, CHOOSE_BACK, CHOOSE_INTERVAL, CHOOSE_FRONT_MULTI, CHOOSE_BACK_MULTI, CONFIRM_DELETE = range(8)
 
-#============================Show=settings============================
-
-async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    username = update.effective_user.username
-
-    user = await sync_to_async(TgUser.objects.get, thread_sensitive=True)(username=username)
-    settings = await sync_to_async(UserSubscriptionSettings.objects.get(user=user), thread_sensitive=True)()
-    if settings:
-        filter = ', '.join(list(settings.filters))
-        await update.message.reply_text(filter)
-    else:
-        await update.message.reply_text('У вас еще нет натроенного фильтра вакансий')
 
 #==========================Create=or=Update=Stage======================
 
 async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = update.effective_user.username
     context.user_data['step'] = 'settings'
-    user, created = await sync_to_async(TgUser.objects.get_or_create, thread_sensitive=True)(username=username)
+    user, _ = await get_or_create_user(username)
     if user.is_subscribed:
         await update.message.reply_text("Тут вы можете настроить свои фильтры", reply_markup=markup_settings)
         return CHOOSE_SETTINGS
@@ -46,8 +34,8 @@ async def create_or_update_settings(update: Update, context: ContextTypes.DEFAUL
 
 async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    user = await sync_to_async(TgUser.objects.get, thread_sensitive=True)(username=username)
-    settings = await sync_to_async(UserSubscriptionSettings.objects.get, thread_sensitive=True)(user=user.id)
+    user, _ = await get_or_create_user(username)
+    settings = await get_user_subscription(user.id)
     if settings:
         filter = ', '.join(list(settings.filters))
         await update.message.reply_text(f'Ваши настройки фильтра: {filter}')
@@ -58,8 +46,8 @@ async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def delete_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = update.effective_user.username
-    user = await sync_to_async(TgUser.objects.get, thread_sensitive=True)(username=username)
-    subscription = await sync_to_async(UserSubscriptionSettings.objects.get, thread_sensitive=True)(user=user.id)
+    user, _ = await get_or_create_user(username)
+    subscription = await get_user_subscription(user.id)
     if subscription:
         context.user_data['subscription_id'] = subscription.id
         await update.message.reply_text(
@@ -73,7 +61,7 @@ async def delete_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     answer = update.message.text.strip().lower()
     username = update.effective_user.username
-    user = await sync_to_async(TgUser.objects.get, thread_sensitive=True)(username=username)
+    user, _ = await get_or_create_user(username)
     subscription = await sync_to_async(UserSubscriptionSettings.objects.get, thread_sensitive=True)(user=user.id)
     if answer == 'да':
         subscription_id = context.user_data.get('delete_subscription_id')
@@ -137,8 +125,7 @@ async def select_backend_stack(update: Update, context: ContextTypes.DEFAULT_TYP
 #====================================Iterval=Stage============================
 
 async def set_interval(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    interval = update.message.text
-    
+    interval = update.message.text    
     context.user_data["interval"] = interval
     return await done(update, context)
 
@@ -162,9 +149,9 @@ async def cancel_selection(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     )
     return CHOOSE_SETTINGS
 
-#===============================Done=And=Back=====================================
+#===============================Done=Exit=And=Back=====================================
 
-async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     step = context.user_data.get('step')
     match step:
         case "create_or_update":
