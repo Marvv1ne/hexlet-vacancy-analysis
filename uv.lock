@@ -233,12 +233,6 @@ wheels = [
 ]
 
 [[package]]
-name = "django-pytest"
-version = "0.2.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/b2/e2/2a87105042c08a6f116aac1d9c666e89982a4f707652a0f7d76e8a88b554/django-pytest-0.2.0.tar.gz", hash = "sha256:de21f20f9e7eb941529d75078b18192506a9f6d4ae80f86fbe2f3bcac8e09d71", size = 5906, upload-time = "2012-03-28T21:26:17.372Z" }
-
-[[package]]
 name = "django-timezone-field"
 version = "7.1"
 source = { registry = "https://pypi.org/simple" }
@@ -305,11 +299,6 @@ dependencies = [
     { name = "requests" },
 ]
 
-[package.dev-dependencies]
-dev = [
-    { name = "django-pytest" },
-]
-
 [package.metadata]
 requires-dist = [
     { name = "bs4", specifier = ">=0.0.2" },
@@ -327,7 +316,7 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "django-pytest", specifier = ">=0.2.0" }]
+dev = []
 
 [[package]]
 name = "httpcore"
