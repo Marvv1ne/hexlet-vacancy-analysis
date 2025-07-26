@@ -21,10 +21,29 @@ services:
     ports:
       - "6379:6379"
 
+  migrate:
+    build: .
+    command: sh -c "python manage.py migrate"
+    depends_on:
+      - postgres
+    environment:
+      - DJANGO_SETTINGS_MODULE=app.settings
+      - DATABASE_HOST=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=${DATABASE_NAME}
+      - DATABASE_USERNAME=${DATABASE_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - REDIS_URL=redis://redis:6379/0
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+    env_file:
+      - .env
+    volumes:
+      - .:/code
+
   telegram-bot:
     container_name: telegram_bot
     build: .
-    command: bash -c "make migrations && make migrate && make run_bot"
+    command: bash -c "make run_bot"
     volumes:
       - .:/code
     environment:
@@ -39,8 +58,12 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
 
   sender-service:
     container_name: sender-service
@@ -60,9 +83,14 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - telegram-bot
-      - redis
+      postgres:
+        condition: service_started
+      telegram-bot:
+        condition: service_started
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
 
   celery-beat:
     container_name: celery-beat
@@ -82,9 +110,14 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - telegram-bot
-      - redis
+      postgres:
+        condition: service_started
+      telegram-bot:
+        condition: service_started
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
 
   flower:
     container_name: flower
