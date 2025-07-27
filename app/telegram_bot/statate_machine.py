@@ -84,10 +84,12 @@ async def select_profession(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     match profession:
         case 'frontend':
             context.user_data['step'] = 'frontend'
+            context.user_data['frontend_stack'] = set()
             await update.message.reply_text("Выберите стек фронтенда (можно выбрать несколько):", reply_markup=markup_front)
             return CHOOSE_FRONT_MULTI
         case 'backend':
             context.user_data['step'] = 'backend'
+            context.user_data['backend_stack'] = set()
             await update.message.reply_text("Выберите стек бэкенда (можно выбрать несколько):", reply_markup=markup_backend)
             return CHOOSE_BACK_MULTI
         case _:
@@ -98,7 +100,7 @@ async def select_profession(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 async def select_frontend_stack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     stack = update.message.text
     context.user_data['step'] = 'frontend'
-    context.user_data.setdefault('frontend_stack', set()).add(stack)
+    context.user_data['frontend_stack'].add(stack)
     current_stack = ", ".join(context.user_data["frontend_stack"])
     await update.message.reply_text(
         f"Выбранные технологии: {current_stack}\n"
@@ -112,7 +114,7 @@ async def select_frontend_stack(update: Update, context: ContextTypes.DEFAULT_TY
 async def select_backend_stack(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     stack = update.message.text
     context.user_data['step'] = 'backend'
-    context.user_data.setdefault('backend_stack', set()).add(stack)
+    context.user_data['backend_stack'].add(stack)
     current_stack = ", ".join(context.user_data["backend_stack"])
     await update.message.reply_text(
         f"Выбранные технологии: {current_stack}\n"
@@ -181,6 +183,8 @@ async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_T
             else:
                 #Для отладки
                 await update.message.reply_text(f"Что то пошло не так\n{context.user_data.profession}", reply_markup=ReplyKeyboardRemove())
+        case _:
+            await update.message.reply_text("Не все идет по плану")
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -213,10 +217,10 @@ settings_handler = ConversationHandler(
     ],
     states={
         CHOOSE_SETTINGS: [
-            MessageHandler(filters.Regex("^create_or_update_settings$"), create_or_update_settings),
-            MessageHandler(filters.Regex("^show_settings$"), show_settings),
-            MessageHandler(filters.Regex("^delete_settings$"), delete_settings),
-            MessageHandler(filters.Regex("^Done$"), done),
+            MessageHandler(filters.Regex("^create/update$"), create_or_update_settings),
+            MessageHandler(filters.Regex("^show$"), show_settings),
+            MessageHandler(filters.Regex("^delete$"), delete_settings),
+            MessageHandler(filters.Regex("^done$"), done),
         ],
 
         CHOOSE_FILTERS: [
@@ -225,19 +229,19 @@ settings_handler = ConversationHandler(
 
         CHOOSE_FRONT_MULTI: [
             MessageHandler(filters.Regex("^(Angular|Vue\\.js|JS|HTML|CSS|React)$"), select_frontend_stack),
-            MessageHandler(filters.Regex("^Готово$"), finish_selection),
-            MessageHandler(filters.Regex("^Отменить выбор$"), cancel_selection),
+            MessageHandler(filters.Regex("^apply$"), finish_selection),
+            MessageHandler(filters.Regex("^cancel$"), cancel_selection),
         ],
 
         CHOOSE_BACK_MULTI: [
             MessageHandler(filters.Regex("^(Python|Java|Nodejs|Go|PHP|C\\+\\+)$"), select_backend_stack),
-            MessageHandler(filters.Regex("^Готово$"), finish_selection),
-            MessageHandler(filters.Regex("^Отменить выбор$"), cancel_selection),
+            MessageHandler(filters.Regex("^apply$"), finish_selection),
+            MessageHandler(filters.Regex("^cancel$"), cancel_selection),
         ],
 
         CHOOSE_INTERVAL: [
             MessageHandler(filters.Regex("^(minute|day|week)$"), set_interval),
-             MessageHandler(filters.Regex("^Отменить выбор$"), cancel_selection),
+             MessageHandler(filters.Regex("^cancel$"), cancel_selection),
         ],
 
         CONFIRM_DELETE: [
@@ -248,7 +252,7 @@ settings_handler = ConversationHandler(
      fallbacks=[
         MessageHandler(filters.Regex("^exit$"), exit),
         MessageHandler(filters.Regex("^Done$"), done),
-        MessageHandler(filters.Regex("^🔙 Назад$"), back_to_previose_stage),
+        MessageHandler(filters.Regex("^🔙 back$"), back_to_previose_stage),
     ],
 )
 
