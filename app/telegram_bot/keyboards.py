@@ -8,18 +8,18 @@ markup_filters = ReplyKeyboardMarkup([
 markup_front = ReplyKeyboardMarkup([
     ["React", "Vue.js", "Angular"],
     ["JS", "HTML", "CSS"],
-    ["apply", "cancel", "🔙 back"]
+    ["👌apply", "❌cancel", "🔙 back"]
     ], resize_keyboard=True)
 
 markup_backend = ReplyKeyboardMarkup([
     ["Python", "Java", "Nodejs"],
     ["Go", "PHP", "C++"],
-    ["apply", "cancel", "🔙 back"]
+    ["👌apply", "❌cancel", "🔙 back"]
     ], resize_keyboard=True)
 
 markup_interval = ReplyKeyboardMarkup([
     ["minute", "day", "week"],
-    ["cancel", "🔙 back"]
+    ["❌cancel", "🔙 back"]
     ], resize_keyboard=True)
 
 markup_settings = ReplyKeyboardMarkup([
