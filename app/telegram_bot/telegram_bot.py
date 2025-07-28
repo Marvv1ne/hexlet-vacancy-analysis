@@ -8,7 +8,7 @@ from app.settings import TELEGRAM_BOT_TOKEN
 from app.telegram_bot.handlers import setup_handlers
 from app.telegram_bot.models import TgUser
 
-logger = logging.getLogger('djabgo')
+logger = logging.getLogger(__name__)
 
 COMMANDS = [
     BotCommand('start', 'Запустить бота'),
@@ -21,14 +21,9 @@ async def set_commands(application):
     await application.bot.set_my_commands(COMMANDS)
 
 def run_bot():
-    logger.info('Starting telegram bot')
-    
-    
+    logger.info('Starting telegram bot')    
     application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-    
-    
     setup_handlers(application)
     application.post_init = set_commands
-
     logger.info('running bot')
     application.run_polling()
