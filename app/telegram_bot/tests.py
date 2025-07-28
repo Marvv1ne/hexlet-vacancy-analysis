@@ -6,7 +6,7 @@ import unittest.mock
 
 from app.telegram_bot.models import TgUser
 from app.telegram_bot.handlers import start, subscribe
-from app.telegram_bot.statate_machine import settings, show_settings, delete_settings, confirm_delete, select_profession, select_frontend_stack, select_backend_stack, finish_selection, cancel_selection, back_to_previose_stage, done, exit, set_interval
+from app.telegram_bot.state_machine import settings, show_settings, delete_settings, confirm_delete, select_profession, select_frontend_stack, select_backend_stack, finish_selection, cancel_selection, back_to_previose_stage, done, exit, set_interval
 from app.telegram_bot.keyboards import (
     markup_filters, markup_front, markup_backend,
     markup_settings, markup_interval
