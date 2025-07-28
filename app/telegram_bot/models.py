@@ -11,7 +11,7 @@ from django_celery_beat.models import CrontabSchedule
 
 class TgUser(models.Model):
     username = models.CharField(max_length=50, unique=True)
-    chat_id=models.CharField(max_length=50, blank=True, null=True)
+    user_id = models.CharField(max_length=50, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     is_subscribed = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now=True)
@@ -31,11 +31,11 @@ class UserSubscriptionSettings(models.Model):
         super().save(*args, **kwargs)
         if self.crontab:
             PeriodicTask.objects.update_or_create(
-                name=f"user_{self.user.id}_subscription_{self.id}",
+                name=self.user.username,
                 defaults={
                     'crontab': self.crontab,
                     'task': 'app.services.sender_service.tasks.send_telegram_message_task',
-                    'args': json.dumps([self.user.chat_id, self.filters]),
+                    'args': json.dumps([self.user.user_id, self.filters]),
                     'enabled': self.user.is_subscribed,
                 }
             )
