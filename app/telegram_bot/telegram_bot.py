@@ -1,12 +1,10 @@
 import logging
 
-from asgiref.sync import sync_to_async
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, BotCommand, BotCommand
-from telegram.ext import Application, CommandHandler, ContextTypes, filters, ConversationHandler, MessageHandler
+from telegram import BotCommand
+from telegram.ext import Application
 
 from app.settings import TELEGRAM_BOT_TOKEN
 from app.telegram_bot.handlers import setup_handlers
-from app.telegram_bot.models import TgUser
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +15,10 @@ COMMANDS = [
     BotCommand('settings', 'Настроить фильтры'),
 ]
 
+
 async def set_commands(application):
     await application.bot.set_my_commands(COMMANDS)
+
 
 def run_bot():
     logger.info('Starting telegram bot')    

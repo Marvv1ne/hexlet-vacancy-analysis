@@ -1,9 +1,10 @@
-import os
 import asyncio
-from django.core.mail import send_mail
+
 from django.conf import settings
+from django.core.mail import send_mail
 from telegram import Bot
-from celery import shared_task
+
+from app.settings import TELEGRAM_BOT_TOKEN
 
 
 def send_email_message(to_email, subject, message):
@@ -25,8 +26,6 @@ def send_telegram_message(chat_id, message):
     Отправить сообщение через Telegram-бота.
     Требует TELEGRAM_BOT_TOKEN в settings.py или переменных окружения.
     """
-    token = getattr(settings, 'TELEGRAM_BOT_TOKEN', None) or os.getenv('TELEGRAM_BOT_TOKEN')
-    if not token:
-        raise ValueError('TELEGRAM_BOT_TOKEN не задан в настройках!')
+    token = TELEGRAM_BOT_TOKEN
     bot = Bot(token=token)
     asyncio.run(bot.send_message(chat_id=chat_id, text=message))
