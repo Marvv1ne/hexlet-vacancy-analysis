@@ -3,7 +3,7 @@ from asgiref.sync import sync_to_async
 from telegram.ext import Application, CommandHandler, ContextTypes, filters, ConversationHandler, MessageHandler
 
 from app.telegram_bot.models import TgUser, UserSubscriptionSettings
-from app.telegram_bot.statate_machine import settings, settings_handler
+from app.telegram_bot.state_machine import settings, settings_handler
 from app.telegram_bot.utils import get_or_create_user
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
