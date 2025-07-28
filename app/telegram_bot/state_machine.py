@@ -9,7 +9,7 @@ from app.telegram_bot.keyboards import (
 )
 
 from app.telegram_bot.models import TgUser, UserSubscriptionSettings
-from app.telegram_bot.utils import save_subscription_settings_to_db, get_or_create_user, get_user_subscription
+from app.telegram_bot.utils import save_subscription_settings_to_db, get_user, get_user_subscription, get_periodic_task
 
 CHOOSE_SETTINGS, CHOOSE_FILTERS, CHOOSE_FRONT, CHOOSE_BACK, CHOOSE_INTERVAL, CHOOSE_FRONT_MULTI, CHOOSE_BACK_MULTI, CONFIRM_DELETE = range(8)
 
@@ -19,7 +19,7 @@ CHOOSE_SETTINGS, CHOOSE_FILTERS, CHOOSE_FRONT, CHOOSE_BACK, CHOOSE_INTERVAL, CHO
 async def settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = update.effective_user.username
     context.user_data['step'] = 'settings'
-    user, _ = await get_or_create_user(username)
+    user = await get_user(username)
     if user.is_subscribed:
         await update.message.reply_text("Тут вы можете настроить свои фильтры", reply_markup=markup_settings)
         return CHOOSE_SETTINGS
@@ -34,7 +34,7 @@ async def create_or_update_settings(update: Update, context: ContextTypes.DEFAUL
 
 async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
     username = update.effective_user.username
-    user, _ = await get_or_create_user(username)
+    user = await get_user(username)
     settings = await get_user_subscription(user.id)
     if settings:
         filter = ', '.join(list(settings.filters))
@@ -46,10 +46,10 @@ async def show_settings(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def delete_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     username = update.effective_user.username
-    user, _ = await get_or_create_user(username)
-    subscription = await get_user_subscription(user.id)
+    user = await get_user(username)
+    subscription = await get_user_subscription(user.id) # чтобы не обращаться в бд можно попробовать subscription в context_data
     if subscription:
-        context.user_data['subscription_id'] = subscription.id
+        context.user_data['subscription'] = subscription
         await update.message.reply_text(
                 "Вы уверены, что хотите удалить все настройки фильтра? (Да/Нет)",
                 reply_markup=ReplyKeyboardRemove()
@@ -60,20 +60,25 @@ async def delete_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
 async def confirm_delete(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     answer = update.message.text.strip().lower()
-    username = update.effective_user.username
-    user, _ = await get_or_create_user(username)
-    subscription = await sync_to_async(UserSubscriptionSettings.objects.get, thread_sensitive=True)(user=user.id)
     if answer == 'да':
-        subscription_id = context.user_data.get('delete_subscription_id')
-        settings = await sync_to_async(UserSubscriptionSettings.objects.get, thread_sensitive=True)(id=subscription.id)
-        task = await sync_to_async(PeriodicTask.objects.get, thread_sensitive=True)(name=f"user_{user.id}_subscription_{subscription.id}")
-        await sync_to_async(settings.delete)()
+        username = update.effective_user.username
+        """
+        user, _ = await get_or_create_user(username)
+        subscription = await get_user_subscription(user.id)
+        """
+        
+        task = await get_periodic_task(username=username)
+
+        await sync_to_async(context.user_data['subscription'].delete)()
         await sync_to_async(task.delete)()
+        context.user_data.clear()
         await update.message.reply_text("Ваши настройки и рассылка удалены.", reply_markup=markup_settings)
         return CHOOSE_SETTINGS
     else:
+        context.user_data.clear()
         await update.message.reply_text("Удаление отменено.", reply_markup=markup_settings)
         return CHOOSE_SETTINGS
+    
 
 #==========================Filters=Stage======================
 
@@ -190,7 +195,7 @@ async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_T
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     user_data = context.user_data
     username = update.effective_user.username
-    chat_id = update.effective_user.id
+    user_id = update.effective_user.id
 
     filters = list(user_data.get("filters", []))
     interval = user_data.get("interval", "не задан")
@@ -229,19 +234,19 @@ settings_handler = ConversationHandler(
 
         CHOOSE_FRONT_MULTI: [
             MessageHandler(filters.Regex("^(Angular|Vue\\.js|JS|HTML|CSS|React)$"), select_frontend_stack),
-            MessageHandler(filters.Regex("^apply$"), finish_selection),
-            MessageHandler(filters.Regex("^cancel$"), cancel_selection),
+            MessageHandler(filters.Regex("^👌apply$"), finish_selection),
+            MessageHandler(filters.Regex("^❌cancel$"), cancel_selection),
         ],
 
         CHOOSE_BACK_MULTI: [
             MessageHandler(filters.Regex("^(Python|Java|Nodejs|Go|PHP|C\\+\\+)$"), select_backend_stack),
-            MessageHandler(filters.Regex("^apply$"), finish_selection),
-            MessageHandler(filters.Regex("^cancel$"), cancel_selection),
+            MessageHandler(filters.Regex("^👌apply$"), finish_selection),
+            MessageHandler(filters.Regex("^❌cancel$"), cancel_selection),
         ],
 
         CHOOSE_INTERVAL: [
             MessageHandler(filters.Regex("^(minute|day|week)$"), set_interval),
-             MessageHandler(filters.Regex("^cancel$"), cancel_selection),
+             MessageHandler(filters.Regex("^❌cancel$"), cancel_selection),
         ],
 
         CONFIRM_DELETE: [
