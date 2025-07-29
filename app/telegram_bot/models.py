@@ -35,8 +35,10 @@ class UserSubscriptionSettings(models.Model):
                 name=self.user.username,
                 defaults={
                     'crontab': self.crontab,
-                    'task': 'app.services.sender_service.tasks.\
-                             send_telegram_message_task',
+                    'task': (
+                        'app.services.sender_service.tasks.'
+                        'send_telegram_message_task'
+                        ),
                     'args': json.dumps([self.user.user_id, self.filters]),
                     'enabled': self.user.is_subscribed,
                 }
