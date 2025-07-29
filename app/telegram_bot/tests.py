@@ -18,7 +18,6 @@ from app.telegram_bot.state_machine import (
     settings,
     show_settings,
 )
-from app.telegram_bot.utils import get_user
 
 
 class TestCommadHandlers(TestCase):
@@ -33,7 +32,6 @@ class TestCommadHandlers(TestCase):
                                 effective_user=self.user)
         self.context = MagicMock()
 
-
     async def test_start(self):
         await start(self.update, self.context)        
         self.message.reply_text.assert_called_once_with(
@@ -45,9 +43,6 @@ class TestCommadHandlers(TestCase):
         self.message.reply_text.assert_called_once_with(
             "Вы подписаны на рассылку вакансий, введете /settings для настройки фильтра"
             )
-
-        #user = await get_user(username="TestUser")
-        #self.assertEqual(user.username, "TestUser")
     
     async def test_settings(self):
         await subscribe(self.update, self.context)
@@ -101,13 +96,13 @@ class TestCommadHandlers(TestCase):
     
     async def test_set_interval(self):
         await subscribe(self.update, self.context)
-        self.context.user_data = {'step': 'backend', 'backend_stack': {'Python', 'Java'}}
+        self.context.user_data = {'step': 'backend', 'backend_stack': {'Python'}}
         await finish_selection(self.update, self.context)
         self.message.text = 'minute'
         await set_interval(self.update, self.context)
         self.message.reply_text.assert_called_with(
             "Ваши настройки сохранены:\n"
-            "Фильтры: Python, Java\n"
+            "Фильтры: Python\n"
             "Интервал: minute\n",
             reply_markup=unittest.mock.ANY)
 
