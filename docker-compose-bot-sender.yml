@@ -37,15 +37,13 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
-    volumes:
-      - .:/code
+
 
   telegram-bot:
     container_name: telegram_bot
     build: .
     command: bash -c "make run_bot"
-    volumes:
-      - .:/code
+    
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
       - DATABASE_HOST=postgres
@@ -69,8 +67,7 @@ services:
     container_name: sender-service
     build: .
     command: celery -A app worker -l info
-    volumes:
-      - .:/code
+    
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
       - DATABASE_HOST=postgres
@@ -96,8 +93,7 @@ services:
     container_name: celery-beat
     build: .
     command: celery -A app beat -l info
-    volumes:
-      - .:/code
+    
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
       - DATABASE_HOST=postgres
