@@ -1,7 +1,8 @@
-# Используем официальный Python-образ
 FROM python:3.12-slim
 
-# Устанавливаем системные зависимости
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
 RUN apt-get update && \
     apt-get install -y build-essential libpq-dev && \
     apt-get install -y --no-install-recommends curl ca-certificates && \
