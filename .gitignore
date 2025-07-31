@@ -18,6 +18,3 @@ key_word
 
 test_fixtures.sh
 error.html
-
-*/migrations/*.py
-*/migrations/*.pyc
