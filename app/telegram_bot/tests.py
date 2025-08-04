@@ -11,12 +11,18 @@ from app.telegram_bot.keyboards import (
 )
 from app.telegram_bot.state_machine import (
     cancel_selection,
+    confirm_delete,
     delete_settings,
+    done,
     exit,
     finish_selection,
     set_interval,
     settings,
     show_settings,
+)
+from app.telegram_bot.utils import (
+    get_user,
+    get_user_subscription,
 )
 
 
@@ -53,14 +59,14 @@ class TestCommadHandlers(TestCase):
             reply_markup=markup_settings
             )
 
-    async def test_show_settings(self):
+    async def test_show_empty_settings(self):
         await subscribe(self.update, self.context)
         await show_settings(self.update, self.context)
         self.message.reply_text.assert_called_with(
             'У вас еще нет натроенного фильтра вакансий'
             )
 
-    async def test_delete_settings_with_no_subscription(self):
+    async def test_delete_empty_settings(self):
         await subscribe(self.update, self.context)     
         await delete_settings(self.update, self.context)
         self.message.reply_text.assert_called_with(
@@ -77,7 +83,8 @@ class TestCommadHandlers(TestCase):
             reply_markup=markup_settings)
 
     async def test_finish_selection(self):
-        self.context.user_data = {'step': 'backend', 'backend_stack': {'Python', 'Java'}}
+        self.context.user_data = {'step': 'backend',
+                                  'backend_stack': {'Python'}}
         await finish_selection(self.update, self.context)
         self.message.reply_text.assert_called_with(
             "Выберите интервал получения уведомлений:",
@@ -96,7 +103,8 @@ class TestCommadHandlers(TestCase):
     
     async def test_set_interval(self):
         await subscribe(self.update, self.context)
-        self.context.user_data = {'step': 'backend', 'backend_stack': {'Python'}}
+        self.context.user_data = {'step': 'backend',
+                                  'backend_stack': {'Python'}}
         await finish_selection(self.update, self.context)
         self.message.text = 'minute'
         await set_interval(self.update, self.context)
@@ -105,4 +113,46 @@ class TestCommadHandlers(TestCase):
             "Фильтры: Python\n"
             "Интервал: minute\n",
             reply_markup=unittest.mock.ANY)
-
+    
+    async def test_show_existing_settings(self):
+        await subscribe(self.update, self.context)
+        self.context.user_data = {'step': 'backend',
+                                  'backend_stack': {'Python'},
+                                  'interval': 'minute'}
+        await done(self.update, self.context)
+        user = await get_user(self.user.username)
+        subscription = await get_user_subscription(user.id)
+        filters = subscription.filters
+        await show_settings(self.update, self.context)
+        self.message.reply_text.assert_called_with(
+            f'Ваши настройки фильтра: {', '.join(filters)}'
+            )
+    
+    async def test_confirm_delete(self):
+        await subscribe(self.update, self.context)
+        self.context.user_data = {'step': 'backend',
+                                  'backend_stack': {'Python'},
+                                  'interval': 'minute'}
+        await done(self.update, self.context)
+        await delete_settings(self.update, self.context)
+        self.message.reply_text.assert_called_with(
+            "Вы уверены, что хотите удалить все настройки фильтра? (Да/Нет)",
+            reply_markup=unittest.mock.ANY
+            )
+    
+    async def test_delete_existing_settings(self):
+        await subscribe(self.update, self.context)
+        self.context.user_data = {'step': 'backend',
+                                  'backend_stack': {'Python'},
+                                  'interval': 'minute'}
+        await done(self.update, self.context)
+        self.update.message.text = 'да'
+        user = await get_user(self.user.username)
+        subscription = await get_user_subscription(user.id)
+        self.context.user_data['subscription'] = subscription
+        await confirm_delete(self.update, self.context)
+        self.message.reply_text.assert_called_with(
+            "Ваши настройки и рассылка удалены.",
+            reply_markup=markup_settings,
+            )
+        self.assertEqual(await get_user_subscription(user.id), None)
