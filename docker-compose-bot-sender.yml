@@ -42,7 +42,7 @@ services:
   telegram-bot:
     container_name: telegram_bot
     build: .
-    command: bash -c "make run_bot"
+    command: bash -c "make run-bot"
     
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings

@@ -29,7 +29,7 @@ migrate:
 run:
 	uv run manage.py runserver
 
-run_bot:
+run-bot:
 	uv run manage.py run_bot
 
 run-telegram:
