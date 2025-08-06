@@ -192,7 +192,7 @@ async def finish_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await back_to_previose_stage(update, context)
     context.user_data.setdefault("filters", set()).update(stack)    
     await update.message.reply_text(
-        f"Выберите интервал получения уведомлений:",
+        "Выберите интервал получения уведомлений:",
         reply_markup=markup_interval
         )
     return CHOOSE_INTERVAL
