@@ -33,7 +33,7 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
@@ -51,7 +51,7 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
@@ -75,7 +75,7 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
@@ -101,7 +101,7 @@ services:
       - DATABASE_NAME=${DATABASE_NAME}
       - DATABASE_USERNAME=${DATABASE_USERNAME}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     env_file:
       - .env
@@ -123,7 +123,7 @@ services:
       - "5555:5555"
     environment:
       - DJANGO_SETTINGS_MODULE=app.settings
-      - REDIS_URL=redis://redis:6379/0
+      - REDIS_URL=${REDIS_URL}
     env_file:
       - .env
     depends_on:
