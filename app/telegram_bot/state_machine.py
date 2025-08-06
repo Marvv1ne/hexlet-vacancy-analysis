@@ -182,13 +182,17 @@ async def set_interval(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def finish_selection(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # context.user_data["step"] = "interval" # Под вопросом
     stack_name = context.user_data['step'] + '_stack'
-    stack = context.user_data.get(stack_name, set())
-    context.user_data.setdefault("filters", set()).update(stack)
     context.user_data["step"] = "interval"
+    stack = context.user_data.get(stack_name)
+    if not stack:
+        await update.message.reply_text(
+            "Вы не выбрали ни одной технологии"
+            )
+        return await back_to_previose_stage(update, context)
+    context.user_data.setdefault("filters", set()).update(stack)    
     await update.message.reply_text(
-        "Выберите интервал получения уведомлений:",
+        f"Выберите интервал получения уведомлений:",
         reply_markup=markup_interval
         )
     return CHOOSE_INTERVAL
@@ -239,6 +243,7 @@ async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_T
         case 'interval':
             if 'backend_stack' in context.user_data:
                 context.user_data["step"] = "backend"
+                del context.user_data["backend_stack"]
                 await update.message.reply_text(
                     "Назад к выбору бэкенд стека:",
                     reply_markup=markup_backend
@@ -246,6 +251,7 @@ async def back_to_previose_stage(update: Update, context: ContextTypes.DEFAULT_T
                 return CHOOSE_BACK_MULTI
             elif 'frontend_stack' in context.user_data:
                 context.user_data["step"] = "frontend"
+                del context.user_data["frontend_stack"]
                 await update.message.reply_text(
                     "Назад к выбору фронтенд стека:",
                     reply_markup=markup_front
