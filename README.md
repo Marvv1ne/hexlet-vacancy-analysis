@@ -49,6 +49,12 @@ make create-superuser
 make run
 ```
 
+## Run telegram bot
+
+```bash
+make run-bot
+```
+
 ## Local run telegram bot
 
 ```bash
