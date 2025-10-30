@@ -40,3 +40,4 @@ shell:
 
 test:
 	uv run manage.py test
+	
